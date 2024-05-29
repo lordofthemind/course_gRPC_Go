@@ -1,6 +1,14 @@
 .
 ├── Makefile
 ├── calculator
+│   ├── calculator_client
+│   │   └── client.go
+│   ├── calculator_server
+│   │   └── server.go
+│   └── calculatorpb
+│       ├── calculator.pb.go
+│       ├── calculator.proto
+│       └── calculator_grpc.pb.go
 ├── go.mod
 ├── go.sum
 ├── greet
@@ -14,4 +22,4 @@
 │       └── greet_grpc.pb.go
 └── tree.txt
 
-6 directories, 9 files
+9 directories, 14 files
