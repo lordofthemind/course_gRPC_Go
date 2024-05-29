@@ -1,0 +1,17 @@
+.
+├── Makefile
+├── calculator
+├── go.mod
+├── go.sum
+├── greet
+│   ├── greet_client
+│   │   └── client.go
+│   ├── greet_server
+│   │   └── server.go
+│   └── greetpb
+│       ├── greet.pb.go
+│       ├── greet.proto
+│       └── greet_grpc.pb.go
+└── tree.txt
+
+6 directories, 9 files
