@@ -7,15 +7,14 @@ import (
 	"net"
 
 	"github.com/lordofthemind/course_gRPC_Go/calculator/calculatorpb"
-	"github.com/lordofthemind/course_gRPC_Go/greet/greetpb"
 	"google.golang.org/grpc"
 )
 
 type server struct {
-	greetpb.UnimplementedGreetServiceServer
+	calculatorpb.UnimplementedCalculatorServiceServer
 }
 
-func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
+func (s *server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
 	fmt.Printf("Received Sum RPC: %v\n", req)
 	firstNumber := req.GetFirstNumber()
 	secondNumber := req.GetSecondNumber()
