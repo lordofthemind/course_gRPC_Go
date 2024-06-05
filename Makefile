@@ -4,4 +4,16 @@ gengrt:
 gencalc:
 	protoc --go_out=./calculator --go-grpc_out=./calculator calculator/calculatorpb/calculator.proto
 
-.PHONY: gengrt gencalc
+calser:
+	go run calculator/calculator_server/server.go
+
+calcli:
+	go run calculator/calculator_client/client.go
+
+grtser:
+	go run greet/greet_server/server.go
+
+grtcli:
+	go run greet/greet_client/client.go
+
+.PHONY: gengrt gencalc calser calcli grtser grtcli
