@@ -23,6 +23,7 @@ const (
 	CalculatorService_PrimeNumberDecomposition_FullMethodName = "/calculator.CalculatorService/PrimeNumberDecomposition"
 	CalculatorService_ComputeAverage_FullMethodName           = "/calculator.CalculatorService/ComputeAverage"
 	CalculatorService_FindMaximum_FullMethodName              = "/calculator.CalculatorService/FindMaximum"
+	CalculatorService_SquareRoot_FullMethodName               = "/calculator.CalculatorService/SquareRoot"
 )
 
 // CalculatorServiceClient is the client API for CalculatorService service.
@@ -37,6 +38,10 @@ type CalculatorServiceClient interface {
 	ComputeAverage(ctx context.Context, opts ...grpc.CallOption) (CalculatorService_ComputeAverageClient, error)
 	// Bi-Directional Streaming
 	FindMaximum(ctx context.Context, opts ...grpc.CallOption) (CalculatorService_FindMaximumClient, error)
+	// Error Handling
+	// This will throw an exception if the number is negative
+	// The error message will be "Received a negative number"
+	SquareRoot(ctx context.Context, in *SquareRootRequest, opts ...grpc.CallOption) (*SquareRootResponse, error)
 }
 
 type calculatorServiceClient struct {
@@ -153,6 +158,15 @@ func (x *calculatorServiceFindMaximumClient) Recv() (*FindMaximumResponse, error
 	return m, nil
 }
 
+func (c *calculatorServiceClient) SquareRoot(ctx context.Context, in *SquareRootRequest, opts ...grpc.CallOption) (*SquareRootResponse, error) {
+	out := new(SquareRootResponse)
+	err := c.cc.Invoke(ctx, CalculatorService_SquareRoot_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CalculatorServiceServer is the server API for CalculatorService service.
 // All implementations must embed UnimplementedCalculatorServiceServer
 // for forward compatibility
@@ -165,6 +179,10 @@ type CalculatorServiceServer interface {
 	ComputeAverage(CalculatorService_ComputeAverageServer) error
 	// Bi-Directional Streaming
 	FindMaximum(CalculatorService_FindMaximumServer) error
+	// Error Handling
+	// This will throw an exception if the number is negative
+	// The error message will be "Received a negative number"
+	SquareRoot(context.Context, *SquareRootRequest) (*SquareRootResponse, error)
 	mustEmbedUnimplementedCalculatorServiceServer()
 }
 
@@ -183,6 +201,9 @@ func (UnimplementedCalculatorServiceServer) ComputeAverage(CalculatorService_Com
 }
 func (UnimplementedCalculatorServiceServer) FindMaximum(CalculatorService_FindMaximumServer) error {
 	return status.Errorf(codes.Unimplemented, "method FindMaximum not implemented")
+}
+func (UnimplementedCalculatorServiceServer) SquareRoot(context.Context, *SquareRootRequest) (*SquareRootResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SquareRoot not implemented")
 }
 func (UnimplementedCalculatorServiceServer) mustEmbedUnimplementedCalculatorServiceServer() {}
 
@@ -288,6 +309,24 @@ func (x *calculatorServiceFindMaximumServer) Recv() (*FindMaximumRequest, error)
 	return m, nil
 }
 
+func _CalculatorService_SquareRoot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SquareRootRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CalculatorServiceServer).SquareRoot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CalculatorService_SquareRoot_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CalculatorServiceServer).SquareRoot(ctx, req.(*SquareRootRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CalculatorService_ServiceDesc is the grpc.ServiceDesc for CalculatorService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -298,6 +337,10 @@ var CalculatorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Sum",
 			Handler:    _CalculatorService_Sum_Handler,
+		},
+		{
+			MethodName: "SquareRoot",
+			Handler:    _CalculatorService_SquareRoot_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
