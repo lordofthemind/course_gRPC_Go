@@ -27,7 +27,8 @@
 │   ├── server.csr
 │   ├── server.key
 │   ├── server.pem
+│   ├── server_cert_ext.cnf
 │   └── ssl.sh
 └── tree.txt
 
-10 directories, 21 files
+10 directories, 22 files
