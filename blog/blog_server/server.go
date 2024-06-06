@@ -31,8 +31,8 @@ type blogItem struct {
 }
 
 func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
+	fmt.Println("CreateBlog request")
 	blog := req.GetBlog()
-
 	data := blogItem{
 		AuthorID: blog.GetAuthorId(),
 		Content:  blog.GetContent(),
@@ -62,15 +62,13 @@ func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*
 			Title:    blog.GetTitle(),
 		},
 	}, nil
-
 }
 
 func main() {
-
 	// if we crash the go code, we get the file name and line number
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	// MongoDb connection
+	// MongoDB connection
 	fmt.Println("Connecting to MongoDB")
 	uri := "mongodb://localhost:27017"
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
@@ -78,12 +76,12 @@ func main() {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 
-	// defer func() {
-	// 	fmt.Println("Closing MongoDB Connection")
-	// 	if err := client.Disconnect(context.TODO()); err != nil {
-	// 		panic(err)
-	// 	}
-	// }()
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatalf("Failed to ping MongoDB: %v", err)
+	}
+	fmt.Println("Connected to MongoDB!")
 
 	// Collection
 	mongoCollection = client.Database("mydb").Collection("blog")
@@ -100,13 +98,11 @@ func main() {
 	// Register the service
 	blogpb.RegisterBlogServiceServer(s, &server{})
 
-	//
 	go func() {
 		fmt.Println("Starting server...")
 		if err := s.Serve(lis); err != nil {
 			log.Fatalf("Failed to serve: %v", err)
 		}
-
 	}()
 
 	// Wait for Control C to exit
