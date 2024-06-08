@@ -31,6 +31,42 @@ type blogItem struct {
 	Title    string             `bson:"title"`
 }
 
+func (*server) ListBlog(req *blogpb.ListBlogRequest, stream blogpb.BlogService_ListBlogServer) error {
+	fmt.Println("ListBlog request")
+
+	cursor, err := mongoCollection.Find(context.Background(), bson.D{})
+	if err != nil {
+		return status.Errorf(
+			codes.Internal,
+			"Internal error: %v",
+			err,
+		)
+	}
+	defer cursor.Close(context.Background())
+	for cursor.Next(context.Background()) {
+		data := &blogItem{}
+		err := cursor.Decode(data)
+		if err != nil {
+			return status.Errorf(
+				codes.Internal,
+				"Error decoding data: %v",
+				err,
+			)
+		}
+		stream.Send(&blogpb.ListBlogResponse{
+			Blog: dataToBlogPb(data),
+		})
+	}
+	if err := cursor.Err(); err != nil {
+		return status.Errorf(
+			codes.Internal,
+			"Internal error: %v",
+			err,
+		)
+	}
+	return nil
+}
+
 func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*blogpb.DeleteBlogResponse, error) {
 	fmt.Println("DeleteBlog request")
 	oid, err := primitive.ObjectIDFromHex(req.GetBlogId())

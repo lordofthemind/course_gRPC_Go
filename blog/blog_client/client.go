@@ -47,6 +47,12 @@ func main() {
 		log.Fatalf("Error while deleting blog: %v", err)
 	}
 
+	// List blog
+	err = listBlog(client)
+	if err != nil {
+		log.Fatalf("Error while listing blog: %v", err)
+	}
+
 }
 
 func createBlog(client blogpb.BlogServiceClient) (string, error) {
@@ -115,5 +121,24 @@ func deleteBlog(client blogpb.BlogServiceClient, blogID string) error {
 	}
 
 	fmt.Println("Blog was deleted")
+	return nil
+}
+
+func listBlog(client blogpb.BlogServiceClient) error {
+	fmt.Println("Listing the blog")
+
+	stream, err := client.ListBlog(context.Background(), &blogpb.ListBlogRequest{})
+	if err != nil {
+		return fmt.Errorf("error happened while listing: %v", err)
+	}
+
+	for {
+		res, err := stream.Recv()
+		if err != nil {
+			break
+		}
+		fmt.Println(res.GetBlog())
+	}
+
 	return nil
 }
