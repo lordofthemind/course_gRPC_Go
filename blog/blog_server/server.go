@@ -42,7 +42,7 @@ func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*
 	}
 
 	filter := bson.M{"_id": oid}
-	res, err := mongoCollection.DeleteOne(context.Background(), filter)
+	_, err = mongoCollection.DeleteOne(context.Background(), filter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, status.Errorf(

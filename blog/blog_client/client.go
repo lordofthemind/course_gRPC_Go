@@ -41,6 +41,12 @@ func main() {
 		log.Fatalf("Error while updating blog: %v", err)
 	}
 
+	// Delete blog
+	err = deleteBlog(client, blogID)
+	if err != nil {
+		log.Fatalf("Error while deleting blog: %v", err)
+	}
+
 }
 
 func createBlog(client blogpb.BlogServiceClient) (string, error) {
@@ -98,4 +104,16 @@ func updateBlog(client blogpb.BlogServiceClient, blogID string) error {
 	fmt.Printf("Blog was updated: %v\n", res)
 	return nil
 
+}
+
+func deleteBlog(client blogpb.BlogServiceClient, blogID string) error {
+	fmt.Println("Deleting the blog")
+
+	_, err := client.DeleteBlog(context.Background(), &blogpb.DeleteBlogRequest{BlogId: blogID})
+	if err != nil {
+		return fmt.Errorf("error happened while deleting: %v", err)
+	}
+
+	fmt.Println("Blog was deleted")
+	return nil
 }
