@@ -9,6 +9,7 @@ import (
 	"os/signal"
 
 	"github.com/lordofthemind/course_gRPC_Go/blog/blogpb"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -28,6 +29,107 @@ type blogItem struct {
 	AuthorID string             `bson:"author_id"`
 	Content  string             `bson:"content"`
 	Title    string             `bson:"title"`
+}
+
+func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*blogpb.UpdateBlogResponse, error) {
+	fmt.Println("UpdateBlog request")
+
+	blog := req.GetBlog()
+	oid, err := primitive.ObjectIDFromHex(blog.GetId())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"Cannot parse ID",
+		)
+	}
+
+	data := &blogItem{}
+	filter := bson.M{"_id": oid}
+
+	err = mongoCollection.FindOne(context.Background(), filter).Decode(data)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Cannot find blog with specified ID",
+			)
+		}
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Internal error: %v", err),
+		)
+	}
+
+	data.AuthorID = blog.GetAuthorId()
+	data.Content = blog.GetContent()
+	data.Title = blog.GetTitle()
+
+	updateRes, updateErr := mongoCollection.ReplaceOne(context.Background(), filter, data)
+	if updateErr != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Internal error: %v", updateErr),
+		)
+	}
+
+	if updateRes.ModifiedCount == 0 {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"Cannot update blog with specified ID",
+		)
+	}
+
+	return &blogpb.UpdateBlogResponse{
+		Blog: dataToBlogPb(data),
+	}, nil
+}
+
+func dataToBlogPb(data *blogItem) *blogpb.Blog {
+	return &blogpb.Blog{
+		Id:       data.ID.Hex(),
+		AuthorId: data.AuthorID,
+		Content:  data.Content,
+		Title:    data.Title,
+	}
+}
+
+func (*server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blogpb.ReadBlogResponse, error) {
+	fmt.Println("ReadBlog request")
+
+	blogID := req.GetBlogId()
+	oid, err := primitive.ObjectIDFromHex(blogID)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"Cannot parse ID",
+		)
+	}
+
+	data := &blogItem{}
+	filter := bson.M{"_id": oid}
+
+	err = mongoCollection.FindOne(context.Background(), filter).Decode(data)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Cannot find blog with specified ID",
+			)
+		}
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Internal error: %v", err),
+		)
+	}
+
+	return &blogpb.ReadBlogResponse{
+		Blog: &blogpb.Blog{
+			Id:       data.ID.Hex(),
+			AuthorId: data.AuthorID,
+			Title:    data.Title,
+			Content:  data.Content,
+		},
+	}, nil
 }
 
 func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
