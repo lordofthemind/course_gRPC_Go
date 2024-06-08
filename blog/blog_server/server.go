@@ -31,6 +31,34 @@ type blogItem struct {
 	Title    string             `bson:"title"`
 }
 
+func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*blogpb.DeleteBlogResponse, error) {
+	fmt.Println("DeleteBlog request")
+	oid, err := primitive.ObjectIDFromHex(req.GetBlogId())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"Cannot parse ID",
+		)
+	}
+
+	filter := bson.M{"_id": oid}
+	res, err := mongoCollection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Cannot find blog with specified ID",
+			)
+		}
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Internal error: %v", err),
+		)
+	}
+
+	return &blogpb.DeleteBlogResponse{BlogId: req.GetBlogId()}, nil
+}
+
 func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*blogpb.UpdateBlogResponse, error) {
 	fmt.Println("UpdateBlog request")
 
